@@ -22,6 +22,7 @@ class Chatwork extends Adapter
     options =
       token: process.env.HUBOT_CHATWORK_TOKEN
       rooms: process.env.HUBOT_CHATWORK_ROOMS
+      execude_accounts: process.env.HUBOT_CHATWORK_EXCLUDE_ACCOUNTS || ''
       apiRate: process.env.HUBOT_CHATWORK_API_RATE
 
     bot = new ChatworkStreaming(options, @robot)
@@ -52,6 +53,10 @@ class ChatworkStreaming extends EventEmitter
 
     @token = options.token
     @rooms = options.rooms.split ','
+    @execude_accounts = options.execude_accounts.split ','
+    if @execude_accounts[0] == '' 
+      @execude_accounts = []
+    
     @host = 'api.chatwork.com'
     @rate = parseInt options.apiRate, 10
 
@@ -137,6 +142,9 @@ class ChatworkStreaming extends EventEmitter
         timeout = =>
           @Room(id).Messages().show (err, messages) =>
             for message in messages
+              if @execude_accounts.indexOf(message.account.account_id + '') >= 0
+                continue
+                
               @emit 'message',
                 id,
                 message.message_id,
